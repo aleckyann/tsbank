@@ -13,3 +13,4 @@ export function Escapar() {
         return descriptor;
     };
 }
+//# sourceMappingURL=escapar.js.map
