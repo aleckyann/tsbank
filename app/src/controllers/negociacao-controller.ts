@@ -1,3 +1,4 @@
+import { NegociacoesService } from './../services/negociacoes-service.js';
 import { domInjetor } from '../decorators/dom-injetor.js';
 import { Inspetor } from '../decorators/inspetor.js';
 import { LogarTempoDeExecucao } from '../decorators/logar-tempo-de-execucao.js';
@@ -17,6 +18,7 @@ export class NegociacaoController {
     private negociacoes = new Negociacoes();
     private negociacoesView = new NegociacoesView('#negociacoesView');
     private mensagemView = new MensagemView('#mensagemView');
+    private NegociacoesService = new NegociacoesService();
 
     constructor() {
         this.negociacoesView.update(this.negociacoes);
@@ -26,15 +28,15 @@ export class NegociacaoController {
     @LogarTempoDeExecucao()
     public adiciona(): void {
         const negociacao = Negociacao.criaDe(
-            this.inputData.value, 
+            this.inputData.value,
             this.inputQuantidade.value,
             this.inputValor.value
         );
-     
+
         if (!this.ehDiaUtil(negociacao.data)) {
             this.mensagemView
                 .update('Apenas negociações em dias úteis são aceitas');
-            return ;
+            return;
         }
 
         this.negociacoes.adiciona(negociacao);
@@ -43,28 +45,20 @@ export class NegociacaoController {
     }
 
     private ehDiaUtil(data: Date) {
-        return data.getDay() > DiasDaSemana.DOMINGO 
+        return data.getDay() > DiasDaSemana.DOMINGO
             && data.getDay() < DiasDaSemana.SABADO;
     }
 
-    public importaDados() :void{
-        fetch('http://localhost:8080/dados')
-            .then(res => res.json())
-            .then((dados: any[]) => {
-                return dados.map(dadosDeHoje => {
-                    return new Negociacao(
-                        new Date(), 
-                        dadosDeHoje.vezes, 
-                        dadosDeHoje.montante)
-                })
-            })
-            .then(negociacoesDeHoje  => {
-                for(let negociacao of negociacoesDeHoje) {
+    public importaDados(): void {
+        this.NegociacoesService
+            .obterNegociacoesDoDia()
+            .then(negociacoesDeHoje => {
+                for (let negociacao of negociacoesDeHoje) {
                     this.negociacoes.adiciona(negociacao);
                 }
                 this.negociacoesView.update(this.negociacoes);
             })
-            
+
     }
 
     private limparFormulario(): void {
